@@ -7,7 +7,7 @@ export type EaseName = keyof typeof ease;
 
 // Intro beats, in seconds of intro time. The DOM sequence and the 3D stage both read this one clock.
 export const intro = {
-  type:.8, lift:1.8,
+  type:.8, lift:1.8, nav:2.4,
   drop:[2,2.8], land:[2.45,2.9], open:[2.9,3.5], push:[3,3.7],
   burst:[3.6,4.4], catch:[3.9,4.9], exit:[4,4.8], reveal:4.4, fade:[4.4,5],
   end:5.2,
