@@ -116,11 +116,9 @@ html[data-arrival=shelf] .perfect .rating-treat:nth-child(5){animation-delay:1.4
 .cinema-copy{transition:opacity 1s,transform 1.4s var(--ease-snap)}
 .cinema-final{transition:all 1.2s var(--ease-snap)}
 
-/* Reel outro. From the reveal beat the full-screen canvas glides into the exact box the shelf canvas uses (measured
-   from .canvas-probe), the backdrop dissolves and the shelf chrome fades in, so the hand-off has nothing left to jump. */
+/* Reel outro. The camera frames the packages into the shelf's stage zone (measured from .canvas-probe), the backdrop
+   dissolves and the shelf chrome fades in, so the hand-off has nothing left to jump. */
 .canvas-probe{visibility:hidden;pointer-events:none}
-.cinematic-stage.has-webgl.cinematic-active .scene-canvas{inset:auto;top:0;left:-70px;width:calc(100% + 140px);height:100%;transition:opacity .8s,top 1.5s var(--ease-pour),left 1.5s var(--ease-pour),width 1.5s var(--ease-pour),height 1.5s var(--ease-pour)}
-.cinematic-stage.has-webgl.cinematic-active[data-scene=reveal] .scene-canvas{top:var(--cv-top,0);left:var(--cv-left,-70px);width:var(--cv-w,calc(100% + 140px));height:var(--cv-h,100%)}
 .cinematic-stage.cinematic-active.outro{background:transparent!important;transition:background 1.1s var(--ease-pour)}
 .cinematic-active.outro .cinema-final,.cinematic-active.outro .cinema-chapter,.cinematic-active.outro .skip-cinema{opacity:0;transition:opacity .8s}
 html.cinema-outro:has(.cinematic-active) .site-header{background:var(--paper);color:var(--cocoa);border-color:var(--line)}
@@ -241,3 +239,11 @@ html,body{overflow-x:clip}
  .stage-heading .script{font-size:86px}
  .current-caption p{font-size:15px;max-width:420px}
 }
+
+/* ========== Optimize (impeccable pass) ========== */
+/* One box for the intro layer and the 3D canvas for the whole visit, so the hand-off causes no layout shift. The intro
+   lives inside the shelf instead of being fixed to the window; anything below the shelf waits, hidden, on a dark page. */
+.cinematic-active{position:absolute}
+.cinematic-stage .scene-canvas.live,.cinematic-shelf .scene-canvas.live,.cinematic-stage.has-webgl.cinematic-active .scene-canvas.live{inset:0;transition:opacity .8s}
+html.cinema-running body{background:#321108}
+html.cinema-running main>:not(.shelf),html.cinema-running footer{visibility:hidden}

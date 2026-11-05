@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './sound.css';
 import { SiteProvider } from '@/components/munchies/site';
+import { preload } from 'react-dom';
 export const metadata:Metadata={metadataBase:new URL(process.env.NEXT_PUBLIC_SITE_URL||'https://sweetmunchies.example'),title:{default:'Sweet Munchies by Fizz | Pakistani Desserts, Guildford',template:'%s | Sweet Munchies by Fizz'},description:'Pakistani-inspired desserts, made for the sweetest moments. Discover this week’s kheer and explore the Sweet Munchies dessert collection in Guildford.',robots:{index:process.env.PUBLIC_LAUNCH==='true',follow:true},openGraph:{siteName:'Sweet Munchies by Fizz',locale:'en_AU',type:'website'},icons:{icon:'/favicon.svg'}};
-export default function Layout({children}:{children:React.ReactNode}){// suppressHydrationWarning: browser extensions add attributes to <html> before React hydrates; it only covers this element.
+export default function Layout({children}:{children:React.ReactNode}){
+// The first view paints in Fredoka Bold (the big dessert name, the home page's largest paint) and Nunito Regular.
+['/fonts/font-1.woff2','/fonts/font-2.woff2'].forEach(href=>preload(href,{as:'font',type:'font/woff2',crossOrigin:'anonymous'}));
+// suppressHydrationWarning: browser extensions add attributes to <html> before React hydrates; it only covers this element.
 return <html lang="en-AU" suppressHydrationWarning><body>{/* Without JavaScript the intro never runs, so show the shelf and header straight away. */}<noscript dangerouslySetInnerHTML={{__html:'<style>.sequence{display:none!important}.cinematic-active{position:absolute!important;background:transparent!important;z-index:3!important}.cinematic-active .rendered-stage{opacity:1!important}html .site-header{background:var(--paper)!important;color:var(--cocoa)!important}html .site-header>*{opacity:1!important;translate:none!important}</style>'}}/><SiteProvider>{children}</SiteProvider></body></html>}

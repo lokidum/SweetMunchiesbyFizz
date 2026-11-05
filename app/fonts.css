@@ -1,10 +1,12 @@
+/* Self-hosted, subset to Latin and punctuation, WOFF2 (about 111KB for all seven, down from 663KB of TTF). */
 @font-face {
   font-family: 'Fredoka';
   font-style: normal;
   font-weight: 600;
   font-stretch: normal;
   font-display: swap;
-  src: url(/fonts/font-0.ttf) format('truetype');
+  src: url(/fonts/font-0.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Fredoka';
@@ -12,40 +14,46 @@
   font-weight: 700;
   font-stretch: normal;
   font-display: swap;
-  src: url(/fonts/font-1.ttf) format('truetype');
+  src: url(/fonts/font-1.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/font-2.ttf) format('truetype');
+  src: url(/fonts/font-2.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(/fonts/font-3.ttf) format('truetype');
+  src: url(/fonts/font-3.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/fonts/font-4.ttf) format('truetype');
+  src: url(/fonts/font-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 800;
   font-display: swap;
-  src: url(/fonts/font-5.ttf) format('truetype');
+  src: url(/fonts/font-5.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Sacramento';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/font-6.ttf) format('truetype');
+  src: url(/fonts/font-6.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215, U+FEFF, U+FFFD;
 }
