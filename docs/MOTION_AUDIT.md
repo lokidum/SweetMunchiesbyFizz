@@ -53,13 +53,14 @@ Ordered so each step is shippable on its own and later steps build on earlier on
 - `ContactShadows frames={Infinity}` so the shadow follows the bob, spin and box drop.
 - `--world` and `--ink` are registered with `@property` and transition over 0.65s on `.shelf`, so changing dessert blends the colour instead of cutting.
 - Checked headless in Chrome at 1440 x 900 and 375 x 812: intro beats, reveal, shelf switch, dessert page lid and scroll.
-### Step B: one motion system (1 to 2 days)
+### Step B: one motion system (done 5 November 2026)
 
-- `lib/motion/tokens.ts` with the `ease` and `dur` tokens from `design.md`, registered as GSAP `CustomEase` names, and the same values as CSS custom properties.
-- `lib/device-tier.ts` (high, mid, low, calm) as the brief describes.
-- One GSAP master timeline for the intro with labels (`pour`, `type`, `lift`, `drop`, `push`, `burst`, `catch`, `reveal`). It tweens DOM directly and writes a single `progress` value into a ref that the R3F scene reads. One clock, no drift.
-- Tap anywhere: `timeline.timeScale(4)` once assets are ready. Skip: `seek('reveal')`. Repeat visit: same timeline at `timeScale(5)` for the 1s version.
-- Retarget beats to the design table: pour 0.2, type 0.8, lift 1.8, nav 2.4, drop 2.6, push 3.4, burst 3.8, catch 4.4, reveal 5.0.
+- `lib/motion/index.ts` holds the `ease` and `dur` tokens from `design.md`, the intro beat table, and `beat(t, window, ease)`, which gives eased 0 to 1 progress through a window using GSAP's parser. `app/globals.css` mirrors the tokens as `--ease-*` and `--dur-*`, and the seven ad hoc `cubic-bezier` values now use them.
+- `lib/device-tier.ts` returns high, mid, low or calm plus WebGL support. The stage caps pixel ratio at 2 on high, 1.5 on mid, and halves contact shadow resolution below high.
+- `Experience` runs one GSAP timeline that advances `clock.t`, switches `data-scene` at its beats and staggers "CRAVE IT. Munch it. LOVE IT." in line by line. The 3D stage reads the same `clock` every frame, so the DOM and 3D can no longer drift, and the stage picks up mid-intro if it loads late.
+- Beats (seconds): type 0.8, lift 1.8, drop 2.0 to 2.8 with `drop` ease and a landing squash, lid 2.9 to 3.5 on `snap`, push in 3.0 to 3.7, burst 3.6 to 4.4, hero catch 3.9 to 4.9 on `snap`, reveal 4.4, end 5.2.
+- Tapping the sequence plays the rest at 4 times speed and shortens CSS transitions. Skip still ends it at once. A repeat visit in the same session skips the loader and plays the whole timeline at 5 times speed.
+- Measured headless at 1440 x 900: full intro 5.2s from pour to shelf (was 6.5s), repeat version 1.0s (was skipped entirely), tap during the pour finishes in 1.3s. Reduced motion renders no sequence and no replay button.
 
 ### Step C: the signature moments (1 to 2 weeks)
 
