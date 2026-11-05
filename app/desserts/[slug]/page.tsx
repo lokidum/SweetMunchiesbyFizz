@@ -1,0 +1,3 @@
+import {notFound} from 'next/navigation';import {catalog} from '@/lib/munchies/server';import {Product} from '@/components/munchies/product';
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const d=(await catalog()).find(d=>d.slug===slug);return {title:d?`${d.name} in Guildford`:'Dessert not found',description:d?.description,alternates:{canonical:`/desserts/${slug}`}}}
+export default async function Page({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const d=(await catalog()).find(d=>d.slug===slug);if(!d)notFound();return <Product dessert={d}/>}

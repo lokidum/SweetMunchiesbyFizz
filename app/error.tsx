@@ -1,0 +1,1 @@
+'use client';export default function ErrorPage({reset}:{reset:()=>void}){return <main id="main" className="content-page"><h1 className="page-title">We dropped the tray.</h1><p>Give us a moment, then let’s try that again.</p><button className="primary" onClick={reset}>Try again</button></main>}

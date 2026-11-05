@@ -1,0 +1,1 @@
+import {Admin} from '@/components/munchies/admin';import {catalog,configured} from '@/lib/munchies/server';export const metadata={title:'Fizz’s kitchen',robots:{index:false,follow:false}};export default async function Page(){return <Admin initial={await catalog()} connected={configured()}/>}
