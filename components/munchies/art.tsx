@@ -1,5 +1,5 @@
 import type { Dessert } from '@/lib/munchies/data';
-export function Logo({className=''}:{className?:string}){return <span className={`logo ${className}`}><img src="/brand/logo-source.png" alt="Sweet Munchies by Fizz, for the sweetest moments" width="1919" height="820"/></span>}
+export function Logo({className=''}:{className?:string}){return <span className={`logo ${className}`}><img className="logo-roundel" src="/brand/logo-roundel.webp" alt="Sweet Munchies by Fizz, for the sweetest moments" width="360" height="360"/></span>}
 export function Flower({className=''}:{className?:string}){return <svg className={className} viewBox="0 0 80 80" fill="none" aria-hidden="true">{[0,60,120,180,240,300].map(a=><ellipse key={a} cx="40" cy="22" rx="10" ry="18" transform={`rotate(${a} 40 40)`} fill="currentColor"/>)}<circle cx="40" cy="40" r="9" fill="#F3C969"/></svg>}
 // Concept renders from the 65-image pack, cut out to transparent WebP: closed, open, detail, turn-120, turn-240, plus photo (uncut).
 export type View='closed'|'open'|'detail'|'turn-120'|'turn-240'|'photo';
