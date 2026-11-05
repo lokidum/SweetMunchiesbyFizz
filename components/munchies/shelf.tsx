@@ -27,6 +27,11 @@ export function Shelf({desserts}:{desserts:Dessert[]}){
   const r=el.getBoundingClientRect();setOrigin({x:e?.clientX?e.clientX-r.left:r.width/2,y:e?.clientY?e.clientY-r.top:r.height*.5,size:Math.hypot(r.width,r.height)});setTransitioning(true);
   const root=document.documentElement;root.dataset.arrival='shelf';window.setTimeout(()=>delete root.dataset.arrival,2600);window.setTimeout(()=>router.push(href),800)}
  useEffect(()=>{if(!transitioning||!blob.current)return;const tl=gsap.timeline();tl.fromTo(blob.current,{attr:{r:0}},{attr:{r:origin.size},duration:.75,ease:ease.pour});if(noise.current)tl.fromTo(noise.current,{attr:{baseFrequency:.02}},{attr:{baseFrequency:.005},duration:.75,ease:'none'},0);return()=>{tl.kill()}},[transitioning,origin]);
+ // Keeps the 3D stage and its hit area clear of the caption: the space reserved below the stage follows the caption's real
+ // height, and the CSS grows the shelf rather than letting layers overlap when the screen is short.
+ useEffect(()=>{const el=section.current,caption=el?.querySelector<HTMLElement>('.current-caption');if(!el||!caption)return;
+  const measure=()=>el.style.setProperty('--zone-bottom',`${Math.round(el.getBoundingClientRect().bottom-caption.getBoundingClientRect().top+16)}px`);
+  const observer=new ResizeObserver(measure);observer.observe(el);observer.observe(caption);measure();return()=>observer.disconnect()},[]);
  useEffect(()=>{const wide=matchMedia('(min-width: 768px)');const update=()=>setAxis(wide.matches?'x':'y');update();wide.addEventListener('change',update);return()=>wide.removeEventListener('change',update)},[]);
  useEffect(()=>{let typed='';const key=(e:KeyboardEvent)=>{if((e.target as HTMLElement).matches('input,textarea'))return;typed=(typed+e.key).slice(-6);if(typed==='meetha'){setConfetti(true);setTimeout(()=>setConfetti(false),2400)}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[]);
  useEffect(()=>{const el=section.current;if(!el)return;const pos=position.current;

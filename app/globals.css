@@ -160,4 +160,23 @@ img.studio-product{background:none;width:100%;height:100%;object-fit:contain;use
 .reel-copy p{max-width:420px;margin-bottom:24px}
 @media(max-width:767px){.reel-section{grid-template-columns:1fr;gap:34px;padding:0 7% 75px}.reel-frame{justify-self:center}.reel-copy h2{font-size:36px}.reel-copy h2 .script{font-size:40px}}
 /* Header and gift logos use the 30KB pre-cropped roundel instead of cropping the 2.5MB source with CSS. */
-.logo img.logo-roundel{position:static;width:100%;height:100%;left:auto;top:auto;max-width:100%}
+.logo img.logo-roundel{position:static;width:100%;height:100%;left:auto;top:auto;max-width:100%;object-fit:contain}
+
+/* Shelf zones: heading, stage, caption and track never overlap. --zone-bottom is measured from the caption by shelf.tsx;
+   the shelf grows past the screen height when the stage would otherwise be squeezed under the caption. */
+.cinematic-shelf{--stage-top:150px;--stage-min:320px;min-height:max(690px,calc(var(--stage-top) + var(--stage-min) + var(--zone-bottom,240px)))}
+.cinematic-shelf .scene-canvas{inset:var(--stage-top) -100px var(--zone-bottom,240px)}
+.cinematic-shelf .model-hit{top:calc(var(--stage-top) + 40px);bottom:var(--zone-bottom,240px);height:auto}
+.cinematic-shelf .model-hit span{top:4px;bottom:auto}
+@media(max-width:1100px),(max-height:780px){.cinematic-shelf .stage-left-note{display:none}.cinematic-shelf .stage-stamp{scale:.78;transform-origin:top right}}
+@media(max-width:1000px){.cinematic-shelf>.ingredient{display:none}}
+@media(max-width:767px){.cinematic-shelf{--stage-top:170px;--stage-min:300px}.cinematic-shelf .scene-canvas{inset:var(--stage-top) -95px var(--zone-bottom,240px)}.cinematic-shelf .stage-stamp{display:none}}
+/* Phone and tablet overflow: grid columns may shrink, animated and floating pieces are clipped to their own sections. */
+@media(min-width:768px){.preview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.preview-art .package-wrap{max-width:100%}
+.floaters{overflow:clip}
+.floater{left:calc(4% + var(--i)*30% + var(--d)*8%)}
+@media(max-width:767px){.floaters{inset:0}}
+.returns,.story{overflow-x:clip}
+/* Last guard only; the sections above are fixed at the source. */
+html,body{overflow-x:clip}
