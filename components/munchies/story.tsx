@@ -44,7 +44,7 @@ export function Story({dessert:d,children}:{dessert:Dessert;children:React.React
   </div>
   {children}
   <section className="returns" aria-labelledby="returns-heading">
-   <div className="returns-package" aria-hidden="true"><Package dessert={d}/></div>
+   <div className="returns-package" aria-hidden="true"><Package dessert={d} view="open"/></div>
    <div className="returns-copy"><span className="eyebrow">SAVE ROOM FOR SWEET</span><h2 id="returns-heading">Make room for {d.name.toLowerCase()}.</h2><p>{d.status==='live'?'Add it to your box and collect it from the truck.':'Join the list and we will tell you the moment it is ready.'}</p><DessertAction dessert={d} large/></div>
   </section>
  </div>

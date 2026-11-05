@@ -130,3 +130,32 @@ html.cinema-outro .shelf .stage-stamp{animation-delay:.15s}
 html.cinema-outro .shelf .stage-left-note{animation-delay:.25s}
 html.cinema-outro .shelf .stage-bottom{animation-delay:.35s}
 html.cinema-outro .shelf :is(.shelf-track,.shelf-top){animation-delay:.5s}
+
+/* Concept render cutouts replace the packaging sprite. The square frames share one framing, so contain keeps scale consistent. */
+img.studio-product{background:none;width:100%;height:100%;object-fit:contain;user-select:none}
+
+/* Dessert page turntable: concept render views stacked and cross-faded; drag or the turn button walks the angles. */
+.product-turntable{cursor:grab;touch-action:pan-y}
+.product-turntable:active{cursor:grabbing}
+.turntable-view{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;scale:.97;transition:opacity .55s var(--ease-pour),scale .7s var(--ease-snap);user-select:none;filter:drop-shadow(0 18px 22px #3a13081f)}
+.turntable-view.shown{opacity:1;scale:1}
+/* The renders carry margin around the package, so lift them to fill the visual like the old 3D model did. */
+@media(min-width:768px){.turntable-view{scale:1.2}.turntable-view.shown{scale:1.28}}
+.product-controls{position:absolute;bottom:0;left:50%;translate:-50% 0;display:flex;gap:10px;z-index:6}
+.product-controls .open-package{position:static;transform:none}
+.turn-package{width:42px;height:42px;border-radius:50%;border:1px solid currentColor;display:grid;place-items:center;background:#fdf7ebaa;color:var(--cocoa);transition:rotate .5s var(--ease-snap)}
+.turn-package:hover{rotate:-45deg}
+@media(max-width:767px){.product-controls{bottom:-15px}}
+/* Hero Card photo with a scalloped bite taken out of its top right corner. */
+.card-photo{margin:14px -6px 18px;aspect-ratio:16/10;border-radius:16px;overflow:hidden;-webkit-mask-image:radial-gradient(circle 30px at calc(100% - 2px) 6px,#0000 97%,#000),radial-gradient(circle 22px at calc(100% - 44px) -6px,#0000 97%,#000),radial-gradient(circle 20px at calc(100% + 6px) 44px,#0000 97%,#000);mask-image:radial-gradient(circle 30px at calc(100% - 2px) 6px,#0000 97%,#000),radial-gradient(circle 22px at calc(100% - 44px) -6px,#0000 97%,#000),radial-gradient(circle 20px at calc(100% + 6px) 44px,#0000 97%,#000);-webkit-mask-composite:source-in;mask-composite:intersect}
+.card-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 45%;scale:1.04;transition:scale 1.2s var(--ease-snap)}
+.collectible-card:hover .card-photo img{scale:1.1}
+
+/* Home reel section. */
+.reel-section{padding:20px 9% 110px;display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
+.reel-frame{aspect-ratio:1;max-width:520px;width:100%;justify-self:end;border-radius:30px;overflow:hidden;rotate:-2deg;box-shadow:0 2px 0 #fff8 inset,14px 24px 40px #3a13081f;background:#f6ebdc}
+.reel-frame video{width:100%;height:100%;object-fit:cover;display:block}
+.reel-copy h2{font-size:46px;line-height:1.15;margin:12px 0 18px}
+.reel-copy h2 .script{font-size:52px;display:block;color:#a60f35}
+.reel-copy p{max-width:420px;margin-bottom:24px}
+@media(max-width:767px){.reel-section{grid-template-columns:1fr;gap:34px;padding:0 7% 75px}.reel-frame{justify-self:center}.reel-copy h2{font-size:36px}.reel-copy h2 .script{font-size:40px}}

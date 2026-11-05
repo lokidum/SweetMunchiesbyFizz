@@ -23,3 +23,9 @@ export function CursorDot(){const dot=useRef<HTMLDivElement>(null);
    if(speed>1.6&&now-crumb>90&&document.querySelectorAll('.crumb').length<3){crumb=now;scatter(e.clientX,e.clientY,1,26)}};
   window.addEventListener('pointermove',move);return()=>window.removeEventListener('pointermove',move)},[]);
  return <div ref={dot} className="cursor-dot" aria-hidden="true"/>}
+
+// The 12s hero reel: muted, looping and inline, fetched and played only while it is on screen. Reduced motion gets controls instead.
+export function ReelVideo(){const ref=useRef<HTMLVideoElement>(null);
+ useEffect(()=>{const v=ref.current;if(!v)return;if(calm()){v.controls=true;return}
+  const io=new IntersectionObserver(([e])=>{if(e.isIntersecting){v.preload='auto';v.play().catch(()=>{})}else v.pause()},{threshold:.35});io.observe(v);return()=>io.disconnect()},[]);
+ return <div className="reel-frame"><video ref={ref} src="/reel/sweet-munchies-reel.mp4" poster="/reel/poster.webp" muted loop playsInline preload="none" width={720} height={720} aria-label="Twelve second reel of Sweet Munchies packages opening: kheer, brown butter brownies and Biscoff cups. Concept renders, not photos of Fizz's food."/></div>}
