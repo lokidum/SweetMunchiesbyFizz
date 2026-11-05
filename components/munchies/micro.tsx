@@ -19,7 +19,7 @@ export function flyToBox(from:Element,to:HTMLElement,colour:string){return new P
 export function CursorDot(){const dot=useRef<HTMLDivElement>(null);
  useEffect(()=>{const el=dot.current;if(!el||!matchMedia('(pointer: fine)').matches||calm())return;el.style.display='block';
   const x=gsap.quickTo(el,'x',{duration:.35,ease:'power3'}),y=gsap.quickTo(el,'y',{duration:.35,ease:'power3'});let last={x:0,y:0,t:0},crumb=0;
-  const move=(e:PointerEvent)=>{x(e.clientX);y(e.clientY);const now=performance.now(),speed=Math.hypot(e.clientX-last.x,e.clientY-last.y)/Math.max(1,now-last.t);last={x:e.clientX,y:e.clientY,t:now};
+  const move=(e:PointerEvent)=>{x(e.clientX);y(e.clientY);el.classList.toggle('over-control',!!(e.target as Element|null)?.closest?.('a,button,input,select,textarea,label'));const now=performance.now(),speed=Math.hypot(e.clientX-last.x,e.clientY-last.y)/Math.max(1,now-last.t);last={x:e.clientX,y:e.clientY,t:now};
    if(speed>1.6&&now-crumb>90&&document.querySelectorAll('.crumb').length<3){crumb=now;scatter(e.clientX,e.clientY,1,26)}};
   window.addEventListener('pointermove',move);return()=>window.removeEventListener('pointermove',move)},[]);
  return <div ref={dot} className="cursor-dot" aria-hidden="true"/>}

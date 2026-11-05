@@ -1,11 +1,23 @@
-/* Background music toggle: a small pill in the header, so it never sits on top of page content or shelf controls. */
-.sound-toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 15px;border-radius:999px;border:1px solid var(--line,#3a13082b);background:transparent;color:inherit;font:700 11px/1 Nunito,Arial,sans-serif;letter-spacing:.06em;opacity:.8;transition:opacity .3s,background .3s}
-.sound-toggle:hover,.sound-toggle:focus-visible{opacity:1;background:#3a13080d}
-.sound-bars{display:inline-flex;align-items:flex-end;gap:2px;height:11px}
-.sound-bars i{width:2px;height:100%;border-radius:2px;background:currentColor;transform-origin:bottom;animation:soundBar 1.1s ease-in-out infinite}
-.sound-bars i:nth-child(2){animation-delay:-.35s}
-.sound-bars i:nth-child(3){animation-delay:-.7s}
+/* Background music toggle in the header. Same weight and outline as the cart pill beside it, fixed width so the
+   label change never nudges the header, and the icon always sits in the same slot. */
+.sound-toggle{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:124px;height:44px;padding:0 14px;border-radius:100px;border:1px solid var(--line,#3a13082b);background:transparent;color:inherit;font:800 13px/1 Nunito,Arial,sans-serif;white-space:nowrap;transition:background .25s,border-color .25s,transform .15s}
+.sound-toggle:hover{background:#3a13080d}
+.sound-toggle:active{transform:scale(.97)}
+.sound-toggle:focus-visible{outline:3px solid var(--petal,#a60f35);outline-offset:3px}
+.sound-label{display:inline-block;min-width:62px;text-align:left}
+.sound-icon{flex:none;overflow:visible}
+.sound-note,.sound-bars{transition:opacity .3s,transform .3s;transform-origin:8px 8px}
+.sound-bars{fill:currentColor;opacity:0;transform:scale(.6)}
+.sound-bars rect{transform-box:fill-box;transform-origin:bottom;transform:scaleY(.45)}
+.sound-toggle.is-on .sound-note{opacity:0;transform:scale(.6)}
+.sound-toggle.is-on .sound-bars{opacity:1;transform:none}
+.sound-toggle.is-playing .sound-bars rect{animation:soundBar 1.1s ease-in-out infinite}
+.sound-toggle.is-playing .sound-bars rect:nth-child(2){animation-delay:-.35s}
+.sound-toggle.is-playing .sound-bars rect:nth-child(3){animation-delay:-.7s}
 @keyframes soundBar{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
-@media(prefers-reduced-motion:reduce){.sound-bars i{animation:none;transform:scaleY(.7)}}
-/* Phones: just the note (or the bars while playing) in a 44px circle beside the cart. */
-@media(max-width:767px){.site-header .header-right{gap:4px}.sound-toggle{width:44px;padding:0;justify-content:center;gap:0;font-size:0;letter-spacing:0}.sound-toggle>span[aria-hidden]{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.sound-toggle.is-playing .sound-bars rect{animation:none;transform:scaleY(.75)}}
+/* Phones: a 44px circle with just the icon, beside the cart. */
+@media(max-width:767px){.site-header .header-right{gap:4px}.sound-toggle{width:44px;padding:0;gap:0;border-color:transparent}.sound-label{display:none}.sound-icon{width:19px;height:19px}}
+/* The lagging cursor dot steps aside over buttons and links, so it never sits on top of a label. */
+.cursor-dot{transition:opacity .2s,scale .2s}
+.cursor-dot.over-control{opacity:0;scale:.3}
