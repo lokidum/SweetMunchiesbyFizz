@@ -247,3 +247,13 @@ html,body{overflow-x:clip}
 .cinematic-stage .scene-canvas.live,.cinematic-shelf .scene-canvas.live,.cinematic-stage.has-webgl.cinematic-active .scene-canvas.live{inset:0;transition:opacity .8s}
 html.cinema-running body{background:#321108}
 html.cinema-running main>:not(.shelf),html.cinema-running footer{visibility:hidden}
+
+/* Hero video: plays under the lifting pour, full bleed, then fades away after its own dark drip. */
+.intro-reel{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:5;opacity:0;background:#0b0402;transition:opacity .5s var(--ease-pour);pointer-events:none}
+.intro-reel.is-playing{opacity:1}
+.intro-reel.is-done{opacity:0;transition:opacity .7s var(--ease-pour)}
+.has-reel .box-scene{display:none}
+/* Shown only while the browser is holding sound back for a first tap. */
+.sound-hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 72px);translate:-50% 0;z-index:30;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #f6a19866;background:#3a1308b3;color:#fdf7eb;font:800 12px/1 Nunito,Arial,sans-serif;letter-spacing:.08em;animation:hintPulse 2.4s var(--ease-soft) infinite}
+@keyframes hintPulse{50%{box-shadow:0 0 0 8px #f6a19818}}
+@media(prefers-reduced-motion:reduce){.sound-hint{animation:none}}

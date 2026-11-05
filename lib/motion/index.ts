@@ -6,12 +6,13 @@ export const dur = { micro:.18, base:.45, slow:.9, scene:1.4 } as const;
 export type EaseName = keyof typeof ease;
 
 // Intro beats, in seconds of intro time. The DOM sequence and the 3D stage both read this one clock.
-// Paced as a slow opening reel: the pour fills the screen, the tagline lands line by line and holds, then the sheet
-// drips away before the box drops. Fizz asked for cinematic, so this runs well past design.md's 5s target.
+// A slow opening reel: the pour fills the screen and the tagline lands and holds; as the drips lift they uncover the hero
+// video, and the clock waits at reelHold until the video has played out. Its dark drip then hands off to the shelf reveal.
 export const intro = {
   pourIn:[0,2.4], type:2.1, typeStep:.65, typeDur:1.2, lift:[5.6,8.2], nav:7.4,
-  drop:[7.6,8.9], land:[8.5,9.1], open:[9.3,10.3], push:[9.4,11], burst:[10.2,11.5], catch:[10.6,12.2], exit:[10.6,11.9], reveal:11.2, fade:[11.2,12.2], outro:11.9,
-  end:13,
+  reel:5.3, reelHold:8.2,
+  push:[8.3,9.3], burst:[8.3,9.4], catch:[8.4,10], open:[8.6,9.2], reveal:8.4, fade:[8.4,9.4], outro:9.2,
+  end:10.4,
 } as const;
 // Tap anywhere speeds the intro up; repeat visits in a session play the same timeline as a short version of about 1.3s.
 export const introSpeed = { tap:5, repeat:10 } as const;

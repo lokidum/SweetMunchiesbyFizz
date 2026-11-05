@@ -19,12 +19,13 @@ export function Ingredient({kind=0}:{kind?:number}){return kind===0?<mesh rotati
 // Concept render cutouts as camera-facing cards. The closed shot cross-fades to the open shot as the lid value rises;
 // they are flat, so the scene only ever tilts them in-plane and never turns them edge-on.
 const CARD=3.4;
-function Billboard({slug,open,lidded=true}:{slug:string;open:Live;lidded?:boolean}){
- const closed=useTexture(dessertImage(slug,'closed'));const a=useRef<THREE.MeshBasicMaterial>(null);
+function Billboard({slug,open,lidded=true,face='closed'}:{slug:string;open:Live;lidded?:boolean;face?:'closed'|'open'}){
+ // The home shelf shows every package open (face open), so it skips the closed shot and the lid cross-fade entirely.
+ const closed=useTexture(dessertImage(slug,face));const a=useRef<THREE.MeshBasicMaterial>(null);
  useEffect(()=>{closed.colorSpace=THREE.SRGBColorSpace;closed.anisotropy=4;closed.needsUpdate=true},[closed]);
- useFrame(()=>{if(a.current)a.current.opacity=1-THREE.MathUtils.smoothstep(read(open),.25,.75)});
+ useFrame(()=>{if(a.current)a.current.opacity=face==='open'?1:1-THREE.MathUtils.smoothstep(read(open),.25,.75)});
  // Only a package that can open (the centre one) fetches its open shot, in its own boundary so the closed card shows meanwhile.
- return <group position={[0,.25,0]}><mesh><planeGeometry args={[CARD,CARD]}/><meshBasicMaterial ref={a} map={closed} transparent toneMapped={false} depthWrite={false}/></mesh>{lidded&&<Suspense fallback={null}><OpenShot slug={slug} open={open}/></Suspense>}</group>}
+ return <group position={[0,.25,0]}><mesh><planeGeometry args={[CARD,CARD]}/><meshBasicMaterial ref={a} map={closed} transparent toneMapped={false} depthWrite={false}/></mesh>{lidded&&face==='closed'&&<Suspense fallback={null}><OpenShot slug={slug} open={open}/></Suspense>}</group>}
 function OpenShot({slug,open}:{slug:string;open:Live}){
  const opened=useTexture(dessertImage(slug,'open'));const b=useRef<THREE.MeshBasicMaterial>(null);
  useEffect(()=>{opened.colorSpace=THREE.SRGBColorSpace;opened.anisotropy=4;opened.needsUpdate=true},[opened]);
@@ -42,7 +43,7 @@ function Gradient({colour,show}:{colour:string;show:{current:number}}){const mes
 type Frame={t:number;pos:number;vel:number;lean:number;leanVel:number;leave:number};
 const mod=(a:number,n:number)=>((a%n)+n)%n;
 // One package on the shelf. Its offset from the shelf position places it on the arc; the shared frame adds lean and the intro.
-function Slot({d,i,axis,frame,intro,opened,progress,detail,lidded}:{lidded?:boolean;d:Dessert;i:number;axis:'x'|'y';frame:{current:Frame};intro:boolean;opened:boolean;progress:Live;detail?:boolean}){
+function Slot({d,i,axis,frame,intro,opened,progress,detail,lidded,face}:{lidded?:boolean;face?:'closed'|'open';d:Dessert;i:number;axis:'x'|'y';frame:{current:Frame};intro:boolean;opened:boolean;progress:Live;detail?:boolean}){
  const node=useRef<THREE.Group>(null),lid=useRef(0);
  useFrame(({clock},dt)=>{const g=node.current;if(!g)return;const {t,pos,lean,leave}=frame.current,o=i-pos,a=Math.abs(o),near=1-Math.min(a,1),e=clock.elapsedTime,p=read(progress);
   const reveal=beat(t,beats.catch,'snap'),burst=beat(t,beats.burst,'pour'),pop=beat(t,beats.burst,'drop');let x,y,z,rx,ry,rz;
@@ -58,8 +59,8 @@ function Slot({d,i,axis,frame,intro,opened,progress,detail,lidded}:{lidded?:bool
   else g.visible=a<2.6;
   g.position.set(x,y,z);g.rotation.set(rx*.3,ry*.25,rz);g.scale.setScalar(s);
   const open=intro?beat(t,beats.open,'snap'):.17;lid.current=THREE.MathUtils.damp(lid.current,near>.5?Math.max(leave,opened?Math.min(1,.35+p):open):.05,6,dt)});
- return <group ref={node}><Suspense fallback={null}><Billboard slug={d.slug} open={lid} lidded={lidded}/></Suspense></group>}
-function Scene({dessert,neighbours=[],shelf,zone,intro=false,clock:introClock,opened=false,progress=0,onReady,detail}:StageProps){const box=useRef<THREE.Group>(null),particles=useRef<THREE.Group>(null),rig=useRef<THREE.Group>(null);const lid=useRef(0),backdrop=useRef(intro?1:0),frame=useRef<Frame>({t:0,pos:0,vel:0,lean:0,leanVel:0,leave:0}),last=useRef(0);const [centre,setCentre]=useState(0);const {camera}=useThree();const fired=useRef(false);const axis=shelf?.axis??'x';const clip=useRef<Zone|null>(null);
+ return <group ref={node}><Suspense fallback={null}><Billboard slug={d.slug} open={lid} lidded={lidded} face={face}/></Suspense></group>}
+function Scene({dessert,neighbours=[],shelf,zone,intro=false,clock:introClock,opened=false,progress=0,onReady,detail}:StageProps){const particles=useRef<THREE.Group>(null),rig=useRef<THREE.Group>(null);const backdrop=useRef(intro?1:0),frame=useRef<Frame>({t:0,pos:0,vel:0,lean:0,leanVel:0,leave:0}),last=useRef(0);const [centre,setCentre]=useState(0);const {camera}=useThree();const fired=useRef(false);const axis=shelf?.axis??'x';const clip=useRef<Zone|null>(null);
  useFrame(({clock,pointer,size},dt)=>{if(!fired.current){fired.current=true;onReady?.()}
   // Intro time comes from the shared GSAP clock; outside the intro every beat reads as finished.
   const t=intro&&introClock?introClock.current.t:beats.end+4;const p=read(progress);const reveal=beat(t,beats.catch,'snap'),burst=beat(t,beats.burst,'pour');
@@ -68,8 +69,7 @@ function Scene({dessert,neighbours=[],shelf,zone,intro=false,clock:introClock,op
   const target=THREE.MathUtils.clamp(-vel*.1,-.38,.38),leanVel=f.leanVel+((target-f.lean)*70-f.leanVel*9)*dt;frame.current={t,pos,vel,leanVel,lean:f.lean+leanVel*dt,leave:THREE.MathUtils.damp(f.leave,shelf?.leaving?1:0,4.5,dt)};
   if(shelf&&Math.round(pos)!==centre)setCentre(Math.round(pos));
   if(rig.current){rig.current.rotation.y=THREE.MathUtils.damp(rig.current.rotation.y,pointer.x*.14,4,dt);rig.current.rotation.x=THREE.MathUtils.damp(rig.current.rotation.x,-pointer.y*.05,4,dt)}
-  if(box.current){const b=box.current,squash=Math.sin(beat(t,beats.land,'soft')*Math.PI)*.08,size=1.25-beat(t,[beats.burst[0],beats.exit[1]],'pour')*.5;b.visible=intro&&t<beats.exit[1];b.position.y=-.2+(1-beat(t,beats.drop,'drop'))*5-beat(t,beats.exit,'pour')*4;b.rotation.y=Math.sin(t)*.06;b.scale.set(size*(1+squash*.6),size*(1-squash),size*(1+squash*.6))}
-  lid.current=intro?beat(t,beats.open,'snap'):.17;backdrop.current=intro?1-beat(t,beats.fade,'soft'):0;
+  backdrop.current=intro?1-beat(t,beats.fade,'soft'):0;
   if(particles.current){particles.current.rotation.y=clock.elapsedTime*.075;particles.current.children.forEach((g,i)=>{const a=i*2.39996+clock.elapsedTime*.12;const r=intro?1.2+burst*2.3:2.3+(i%3)*.35;g.position.set(Math.sin(a)*r,Math.cos(a*.7)*1.5+.3+(intro?(1-burst)*-1.5:0),Math.cos(a)*1.3);g.rotation.set(a,a*.5,a*.2);g.scale.setScalar(.9+(i%4)*.3)})}
   camera.position.lerp(new THREE.Vector3(0,detail?2.6:2.2,intro?8.6-beat(t,beats.push,'pour')*.9+reveal*.9:8.6-p*1.1),1-Math.exp(-dt*2));camera.lookAt(0,0,0);
   // Frame the shot into the shelf's stage zone with a view offset, so the canvas box itself never moves or resizes.
@@ -78,14 +78,14 @@ function Scene({dessert,neighbours=[],shelf,zone,intro=false,clock:introClock,op
   if(z&&size.width&&size.height){const k=intro?beat(t,[beats.reveal,beats.end],'pour'):1,zw=size.width+(z.w-size.width)*k,zh=size.height+(z.h-size.height)*k;cam.aspect=zw/zh;cam.setViewOffset(zw,zh,-z.x*k,-z.y*k,size.width,size.height);cam.updateProjectionMatrix();clip.current={x:z.x*k,y:z.y*k,w:zw,h:zh}}
   else{clip.current=null;if(cam.view){cam.clearViewOffset();cam.aspect=size.width/size.height;cam.updateProjectionMatrix()}}
  });
- // Only the five packages on screen load up front; the next one each side is fetched shortly after, ready for a swipe.
+ // Only the five packages on screen load up front (open shots, as the shelf shows them); the next one each side follows.
  // Preloading every dessert used to pull about 1.5MB of textures on the first visit.
- const list=shelf?.desserts;useEffect(()=>{if(!list)return;const n=list.length,id=window.setTimeout(()=>{[-3,3].forEach(k=>useTexture.preload(dessertImage(list[mod(centre+k,n)].slug,'closed')));[-1,1].forEach(k=>useTexture.preload(dessertImage(list[mod(centre+k,n)].slug,'open')))},1500);return()=>clearTimeout(id)},[list,centre]);
+ const list=shelf?.desserts;useEffect(()=>{if(!list)return;const n=list.length,id=window.setTimeout(()=>{[-3,3].forEach(k=>useTexture.preload(dessertImage(list[mod(centre+k,n)].slug,'open')))},1500);return()=>clearTimeout(id)},[list,centre]);
  // Packages outside the stage zone (the phone neighbours above and below) are clipped to it, as the old smaller canvas did.
  // Priority 1 means this callback does the render.
  // Two passes: the backdrop (layer 1) across the whole canvas, then everything else clipped to the zone.
  useFrame(({gl,scene,camera,size})=>{const c=clip.current;gl.autoClear=false;gl.setScissorTest(false);gl.clear();camera.layers.set(BACKDROP);gl.render(scene,camera);camera.layers.set(0);if(c){gl.setScissorTest(true);gl.setScissor(c.x,size.height-c.y-c.h,c.w,c.h)}gl.render(scene,camera);gl.setScissorTest(false)},1);
  const n=shelf?.desserts.length??1;const slots=shelf?[-2,-1,0,1,2].map(k=>({i:centre+k,d:shelf.desserts[mod(centre+k,n)]})):[{i:0,d:dessert},...(neighbours[0]?[{i:-1,d:neighbours[0]}]:[]),...(neighbours[1]?[{i:1,d:neighbours[1]}]:[])];
- return <><Studio/><Gradient colour={intro?'#512011':dessert.colour} show={backdrop}/><group ref={rig}>{slots.map(({i,d})=><Slot key={i} d={d} i={i} axis={axis} frame={frame} intro={intro} opened={opened} progress={progress} detail={detail} lidded={i===centre}/>)}</group><group ref={box}><Suspense fallback={null}><Billboard slug="brown-butter-brownies" open={lid}/></Suspense></group><group ref={particles}>{Array.from({length:18},(_,i)=><group key={i}><Ingredient kind={i%3}/></group>)}</group></>
+ return <><Studio/><Gradient colour={intro?'#512011':dessert.colour} show={backdrop}/><group ref={rig}>{slots.map(({i,d})=><Slot key={i} d={d} i={i} axis={axis} frame={frame} intro={intro} opened={opened} progress={progress} detail={detail} lidded={i===centre} face={shelf?'open':'closed'}/>)}</group><group ref={particles}>{Array.from({length:18},(_,i)=><group key={i}><Ingredient kind={i%3}/></group>)}</group></>
 }
 export default function Stage(props:StageProps){return <Canvas dpr={[1,dprCap[props.tier??'mid']]} camera={{position:[0,2.2,8.6],fov:33}} gl={{alpha:true,antialias:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;gl.domElement.addEventListener('webglcontextlost',props.onFailure||(()=>{}),{once:true})}}><Scene {...props}/></Canvas>}

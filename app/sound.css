@@ -1,11 +1,11 @@
-/* Background music toggle in the header. Same weight and outline as the cart pill beside it, fixed width so the
-   label change never nudges the header, and the icon always sits in the same slot. */
-.sound-toggle{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:124px;height:44px;padding:0 14px;border-radius:100px;border:1px solid var(--line,#3a13082b);background:transparent;color:inherit;font:800 13px/1 Nunito,Arial,sans-serif;white-space:nowrap;transition:background .25s,border-color .25s,transform .15s}
+/* Background music toggle in the header: a 44px circle with just the icon on every screen size. The label stays for
+   screen readers; the icon is a note that cross-fades into equaliser bars while music plays. */
+.sound-toggle{position:relative;display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid var(--line,#3a13082b);background:transparent;color:inherit;transition:background .25s,border-color .25s,transform .15s}
 .sound-toggle:hover{background:#3a13080d}
 .sound-toggle:active{transform:scale(.97)}
 .sound-toggle:focus-visible{outline:3px solid var(--petal,#a60f35);outline-offset:3px}
-.sound-label{display:inline-block;min-width:62px;text-align:left}
-.sound-icon{flex:none;overflow:visible}
+.sound-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sound-icon{flex:none;overflow:visible;width:18px;height:18px}
 .sound-note,.sound-bars{transition:opacity .3s,transform .3s;transform-origin:8px 8px}
 .sound-bars{fill:currentColor;opacity:0;transform:scale(.6)}
 .sound-bars rect{transform-box:fill-box;transform-origin:bottom;transform:scaleY(.45)}
@@ -16,8 +16,8 @@
 .sound-toggle.is-playing .sound-bars rect:nth-child(3){animation-delay:-.7s}
 @keyframes soundBar{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
 @media(prefers-reduced-motion:reduce){.sound-toggle.is-playing .sound-bars rect{animation:none;transform:scaleY(.75)}}
-/* Phones: a 44px circle with just the icon, beside the cart. */
-@media(max-width:767px){.site-header .header-right{gap:4px}.sound-toggle{width:44px;padding:0;gap:0;border-color:transparent}.sound-label{display:none}.sound-icon{width:19px;height:19px}}
+/* Phones: tighter header gap so the circle sits beside the cart. */
+@media(max-width:767px){.site-header .header-right{gap:4px}.sound-toggle{border-color:transparent}.sound-icon{width:19px;height:19px}}
 /* The lagging cursor dot steps aside over buttons and links, so it never sits on top of a label. */
 .cursor-dot{transition:opacity .2s,scale .2s}
 .cursor-dot.over-control{opacity:0;scale:.3}
