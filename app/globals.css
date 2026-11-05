@@ -180,3 +180,64 @@ img.studio-product{background:none;width:100%;height:100%;object-fit:contain;use
 .returns,.story{overflow-x:clip}
 /* Last guard only; the sections above are fixed at the source. */
 html,body{overflow-x:clip}
+
+/* ========== Adapt (impeccable pass, 5 November 2026) ========== */
+/* Readable floor: no running text below 10px, labels at 11px or more. */
+.eyebrow{font-size:11px}
+.stamp{font-size:10.5px;letter-spacing:1.5px}
+.dessert-track button span{font-size:10px}
+.track-count{font-size:12px}
+.replay-cinema{font-size:11px}
+.model-caption{font-size:10px;letter-spacing:.8px}
+.footer-top{font-size:11px}
+.footer-bottom{font-size:12px}
+.breadcrumbs{font-size:13px}
+.fine,.hero-card .fine{font-size:12px!important}
+.loader-words .eyebrow,.cinema-copy>.eyebrow{font-size:10px}
+.stage-stamp span{font-size:10px;letter-spacing:1.1px}
+@media(max-width:767px){.shelf-top{font-size:10px;letter-spacing:1px}.dessert-track button{font-size:12px}}
+/* Comfortable measure on the text pages. */
+.content-page p,.content-page li{max-width:68ch}
+.truck-callout p{max-width:60ch;margin-inline:auto}
+
+/* Mouse: small text links still get a 24px target (WCAG 2.5.8) without moving the layout. */
+:is(.header-right>a,.text-link,.footer-links a,.footer-bottom a,.breadcrumbs a,.shelf-top a,.catalog-grid h2 a,.preview-grid h3 a){position:relative}
+:is(.header-right>a,.text-link,.footer-links a,.footer-bottom a,.breadcrumbs a,.shelf-top a,.catalog-grid h2 a,.preview-grid h3 a)::before{content:'';position:absolute;inset:-5px -3px}
+/* Touch: every control reaches 44px. Small inline links get an invisible hit area so the layout does not move. */
+@media(pointer:coarse){
+ .nav-menu{min-width:44px;justify-content:center}
+ .bag-button{min-height:44px}
+ .shelf .round,.stage-bottom>.round,.preview-art>.round{width:44px;height:44px}
+ .replay-cinema{min-height:44px;padding:8px 14px}
+ .open-package,.turn-package{min-height:44px;min-width:44px}
+ :is(.header-right>a,.text-link,.footer-links a,.footer-bottom a,.breadcrumbs a,.shelf-top a,.catalog-grid h2 a,.preview-grid h3 a)::before{inset:-14px -6px}
+}
+
+/* Phones held sideways: a slim header and a two-column shelf (name and caption left, packages right) that fits the screen. */
+@media(orientation:landscape) and (max-height:500px){
+ .site-header{height:60px}
+ .site-header>a{top:6px}
+ .site-header .logo{width:48px;height:48px}
+ .shelf,.cinematic-shelf{height:calc(100svh - 60px);min-height:300px;max-height:none}
+ .cinematic-shelf :is(.shelf-top,.stage-circle,.stage-flourish,.stage-left-note,.stage-stamp,.replay-cinema),.cinematic-shelf>.ingredient{display:none}
+ .cinematic-shelf .stage-heading{top:12px;left:4%;width:46%;text-align:left}
+ .cinematic-shelf .stage-heading .script{font-size:26px;margin:0 0 -6px 4px;text-align:left}
+ .cinematic-shelf .display-name{font-size:min(16vh,8vw);margin:0}
+ .cinematic-shelf .display-name.long{font-size:min(9.5vh,4.8vw);max-width:100%;margin:6px 0 0}
+ .cinematic-shelf .stage-bottom{left:3%;right:47%;bottom:70px;justify-content:flex-start}
+ .cinematic-shelf .stage-bottom>.round{display:none}
+ .cinematic-shelf .current-caption{max-width:none;width:100%}
+ .cinematic-shelf .caption-actions .primary{white-space:nowrap}
+ .cinematic-shelf .current-caption p{font-size:12px;margin:6px auto 10px}
+ .cinematic-shelf .scene-canvas{inset:0 -40px 60px 50%}
+ .cinematic-shelf .model-hit{left:75%;top:8%;bottom:70px;width:32%;height:auto}
+}
+
+/* Big screens: the shelf fills the window instead of stopping at 850px, so the drop reads at full scale. */
+@media(min-width:1800px) and (min-height:1000px){
+ .shelf{height:calc(100svh - 106px);max-height:none}
+ .cinematic-shelf{--stage-top:200px}
+ .display-name{font-size:clamp(220px,15vw,340px)}
+ .stage-heading .script{font-size:86px}
+ .current-caption p{font-size:15px;max-width:420px}
+}
