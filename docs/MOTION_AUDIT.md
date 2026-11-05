@@ -62,7 +62,26 @@ Ordered so each step is shippable on its own and later steps build on earlier on
 - Tapping the sequence plays the rest at 4 times speed and shortens CSS transitions. Skip still ends it at once. A repeat visit in the same session skips the loader and plays the whole timeline at 5 times speed.
 - Measured headless at 1440 x 900: full intro 5.2s from pour to shelf (was 6.5s), repeat version 1.0s (was skipped entirely), tap during the pour finishes in 1.3s. Reduced motion renders no sequence and no replay button.
 
-### Step C: the signature moments (1 to 2 weeks)
+### Step C: the signature moments (done 5 November 2026)
+
+What shipped, one commit each:
+
+1. **Loader** (`loader.tsx`): about 90 canvas crumbs drift in, orbit the roundel on a tilted swirl, lean toward the pointer and spring back, then burst as the roundel heartbeats. Real progress fills the roundel from the bottom. It uses a 30KB `logo-roundel.webp` instead of the 2.5MB PNG. The header stays dark until the 2.4s nav beat. `noscript` CSS shows the shelf without JavaScript.
+2. **Pour** (`pour.tsx`): full-screen shader with domain-warped chocolate, rose folded through, normal-mapped gloss and two layers of irregular two-tone drips that lift the sheet and wipe the tagline. The tagline is a texture that lands line by line on the sheet. Repeat visits use the CSS curtain.
+3. **Shelf** (`shelf.tsx`, `stage.tsx`): continuous position from wheel, mouse drag and touch, with velocity projection and an `expo.out` snap. One wheel gesture moves one dessert. Five slots sit on an arc (stacked on phones), the set tilts to the cursor, and packages lean on an underdamped spring.
+4. **Into a dessert** (`shelf.tsx`): turbulence-displaced liquid blob from the click point, neighbours slide off, the package rises and opens, App Router navigation with no reload, and the Hero Card slides out from the package side.
+5. **Dessert page** (`story.tsx`): Lenis on the GSAP ticker, three-depth ingredient parallax, story heading revealed line by line, the dessert name on a curved band that turns with scroll, and the package returns with its button.
+6. **Micro moments** (`micro.tsx`): swirl underline on links, button arrow circle fill and drip, Add to box flight with crumbs and a cart wiggle, a lagging cursor dot with crumbs, and a rating crumb with a 5 out of 5 wiggle.
+
+Not done in Step C, and why:
+
+- **One persistent canvas in the root layout.** Each page still creates its own WebGL canvas. The transition hides the swap, but the 3D package is rebuilt on arrival. Doing it properly needs drei `View` or a portal store, so it belongs with Step D.
+- **Motion blur while the shelf moves.** This needs a post-processing pass. Lean and overshoot carry the speed for now.
+- **The Spoon scrub and the cross-section "Inside" section.** Both need real footage (frame sequences) from the food shoot.
+- **"What is it?" copy.** It needs Fizz's wording.
+- **On repeat visits the short intro waits up to 1.2s for the 3D stage to compile** before playing its 1s run, instead of stalling midway.
+
+Original plan for reference:
 
 1. **Loader in the first HTML.** Inline SVG logo plus a 2D canvas of about 90 crumbs on the swirl path, with a spring toward pointer or finger. Real progress tightens the orbit and fills the logo bottom up through `clip-path`. At 100: crumbs burst, one heartbeat, hand off to the timeline.
 2. **The Pour shader.** Full-screen fragment shader, noise driven drip height, chocolate first with rose folded through, fake specular. `uProgress` comes from the master timeline. Type lands line by line with SplitText, then the drip edge wipes it (draw the sheet above the type and let the rising edge cover it). Low tier gets a short WebM.
