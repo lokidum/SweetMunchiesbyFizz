@@ -8,7 +8,9 @@ import {beat,intro as beats} from '@/lib/motion';
 import {dprCap,type Tier} from '@/lib/device-tier';
 
 type Live=number|{current:number};
-export type StageProps={dessert:Dessert;neighbours?:Dessert[];intro?:boolean;clock?:{current:{t:number}};tier?:Tier;opened?:boolean;progress?:Live;onReady?:()=>void;onFailure?:()=>void;detail?:boolean};
+// The home shelf passes its whole list plus a continuous position; other pages pass a single dessert.
+export type ShelfInput={desserts:Dessert[];position:{current:{value:number}};axis:'x'|'y'};
+export type StageProps={dessert:Dessert;neighbours?:Dessert[];shelf?:ShelfInput;intro?:boolean;clock?:{current:{t:number}};tier?:Tier;opened?:boolean;progress?:Live;onReady?:()=>void;onFailure?:()=>void;detail?:boolean};
 // Per-frame values are read from refs so animating them never re-renders the model tree.
 const read=(v:Live)=>typeof v==='number'?v:v.current;
 function useMaterials(d:Dessert){
@@ -53,18 +55,40 @@ const fragment=`uniform float time;uniform float fade;uniform vec3 colour;varyin
 const quadVertex='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,.999,1.);}';
 // Opaque only during the intro; afterwards it fades out so the CSS world colour and HTML title show through.
 function Gradient({colour,show}:{colour:string;show:{current:number}}){const mesh=useRef<THREE.Mesh>(null),m=useRef<THREE.ShaderMaterial>(null);const uniforms=useMemo(()=>({time:{value:0},fade:{value:show.current},colour:{value:new THREE.Color(colour)}}),[]);useFrame(({clock},dt)=>{if(!m.current||!mesh.current)return;const u=m.current.uniforms;u.time.value=clock.elapsedTime;u.colour.value.lerp(new THREE.Color(colour),Math.min(dt*2,1));u.fade.value=THREE.MathUtils.damp(u.fade.value,show.current,5,dt);mesh.current.visible=u.fade.value>.002});return <mesh ref={mesh} frustumCulled={false} renderOrder={-1}><planeGeometry args={[2,2]}/><shaderMaterial ref={m} uniforms={uniforms} fragmentShader={fragment} vertexShader={quadVertex} transparent depthWrite={false}/></mesh>}
-function Scene({dessert,neighbours=[],intro=false,clock:introClock,tier,opened=false,progress=0,onReady,detail}:StageProps){const hero=useRef<THREE.Group>(null),box=useRef<THREE.Group>(null),left=useRef<THREE.Group>(null),right=useRef<THREE.Group>(null),particles=useRef<THREE.Group>(null);const previous=useRef(dessert.slug),turn=useRef(0);const lid=useRef(0),heroLid=useRef(0),backdrop=useRef(intro?1:0);const {camera}=useThree();const fired=useRef(false);
- useEffect(()=>{if(previous.current!==dessert.slug){turn.current=1;previous.current=dessert.slug}},[dessert.slug]);
- useFrame(({clock,pointer},dt)=>{if(!fired.current){fired.current=true;onReady?.()}// Intro time comes from the shared GSAP clock; outside the intro every beat reads as finished.
-const t=intro&&introClock?introClock.current.t:beats.end+4;const p=read(progress);const reveal=beat(t,beats.catch,'snap'),burst=beat(t,beats.burst,'pour'),pop=beat(t,beats.burst,'drop');turn.current=THREE.MathUtils.damp(turn.current,0,4,dt);
- if(hero.current){const g=hero.current;g.visible=t>beats.burst[0];g.position.set(0,-.05+(intro?(1-reveal)*2.5:0)+Math.sin(clock.elapsedTime*.7)*.025,0);g.scale.setScalar((detail?1.15:1)*(.12+.88*pop));g.rotation.set(.08+p*.15,Math.sin(clock.elapsedTime*.45)*.06+pointer.x*.15+(1-reveal)*Math.PI*2+turn.current*1.2,Math.sin(clock.elapsedTime*.7)*.025+(1-reveal)*.35);}
- if(box.current){const b=box.current,squash=Math.sin(beat(t,beats.land,'soft')*Math.PI)*.08,size=1.25-beat(t,[beats.burst[0],beats.exit[1]],'pour')*.5;b.visible=intro&&t<beats.exit[1];b.position.y=-.2+(1-beat(t,beats.drop,'drop'))*5-beat(t,beats.exit,'pour')*4;b.rotation.y=Math.sin(t)*.06;b.scale.set(size*(1+squash*.6),size*(1-squash),size*(1+squash*.6))}
- const targetLid=intro?beat(t,beats.open,'snap'):.17;lid.current=targetLid;heroLid.current=THREE.MathUtils.damp(heroLid.current,opened?Math.min(1,.35+p):targetLid,6,dt);backdrop.current=intro?1-beat(t,beats.fade,'soft'):0;
- [left.current,right.current].forEach((g,i)=>{if(!g)return;const sign=i===0?-1:1;g.visible=t>beats.burst[0]+.2;g.position.set(sign*(2.9+(intro?(1-burst)*-2.7:0)),intro?(1-reveal)*2.1:-.25,-1.1);g.rotation.set(.05,sign*-.35,sign*-.12+Math.sin(clock.elapsedTime*.5+i)*.03);g.scale.setScalar(.68)});
- if(particles.current){particles.current.rotation.y=clock.elapsedTime*.075;particles.current.children.forEach((g,i)=>{const a=i*2.39996+clock.elapsedTime*.12;const r=intro?1.2+burst*2.3:2.3+(i%3)*.35;g.position.set(Math.sin(a)*r,Math.cos(a*.7)*1.5+.3+(intro?(1-burst)*-1.5:0),Math.cos(a)*1.3);g.rotation.set(a,a*.5,a*.2);g.scale.setScalar(.9+(i%4)*.3)})}
- camera.position.lerp(new THREE.Vector3(0,detail?2.6:2.2,intro?8.6-beat(t,beats.push,'pour')*.9+reveal*.9:8.6-p*1.1),1-Math.exp(-dt*2));camera.lookAt(0,0,0);
+type Frame={t:number;pos:number;vel:number;lean:number;leanVel:number};
+const mod=(a:number,n:number)=>((a%n)+n)%n;
+// One package on the shelf. Its offset from the shelf position places it on the arc; the shared frame adds lean and the intro.
+function Slot({d,i,axis,frame,intro,opened,progress,detail}:{d:Dessert;i:number;axis:'x'|'y';frame:{current:Frame};intro:boolean;opened:boolean;progress:Live;detail?:boolean}){
+ const node=useRef<THREE.Group>(null),lid=useRef(0);
+ useFrame(({clock},dt)=>{const g=node.current;if(!g)return;const {t,pos,lean}=frame.current,o=i-pos,a=Math.abs(o),near=1-Math.min(a,1),e=clock.elapsedTime,p=read(progress);
+  const reveal=beat(t,beats.catch,'snap'),burst=beat(t,beats.burst,'pour'),pop=beat(t,beats.burst,'drop');let x,y,z,rx,ry,rz;
+  if(axis==='x'){const ang=o*.55;x=Math.sin(ang)*5.3;y=-.05-.2*Math.min(a,1);z=(Math.cos(ang)-1)*4.6;rx=.05+near*(.03+p*.15);ry=-o*.35;rz=-Math.sign(o)*Math.min(a,1)*.12+lean}
+  else{x=0;y=-.05-o*3.8;z=-Math.min(a,2)*2.2;rx=.08+p*.15*near-lean*.8;ry=0;rz=0}
+  let s=(1-Math.min(a,2)*(axis==='x'?.32:.42))*(detail?1.15:1);
+  // Idle sway, strongest on the centre package.
+  y+=Math.sin(e*.7+i)*.025;ry+=Math.sin(e*.45+i)*.06*near;rz+=Math.sin(e*.5+i)*.03*(1-near);
+  if(intro){if(i===0){y+=(1-reveal)*2.5;ry+=(1-reveal)*Math.PI*2;rz+=(1-reveal)*.35;s*=.12+.88*pop;g.visible=t>beats.burst[0]}
+   else if(a<1.5){x*=.07+.93*burst;y=(1-reveal)*2.1;g.visible=t>beats.burst[0]+.2}else g.visible=false}
+  else g.visible=a<2.6;
+  g.position.set(x,y,z);g.rotation.set(rx,ry,rz);g.scale.setScalar(s);
+  const open=intro?beat(t,beats.open,'snap'):.17;lid.current=THREE.MathUtils.damp(lid.current,near>.5?(opened?Math.min(1,.35+p):open):.05,6,dt)});
+ return <group ref={node}><DessertModel d={d} open={lid}/></group>}
+function Scene({dessert,neighbours=[],shelf,intro=false,clock:introClock,tier,opened=false,progress=0,onReady,detail}:StageProps){const box=useRef<THREE.Group>(null),particles=useRef<THREE.Group>(null),rig=useRef<THREE.Group>(null);const lid=useRef(0),backdrop=useRef(intro?1:0),frame=useRef<Frame>({t:0,pos:0,vel:0,lean:0,leanVel:0}),last=useRef(0);const [centre,setCentre]=useState(0);const {camera}=useThree();const fired=useRef(false);const axis=shelf?.axis??'x';
+ useFrame(({clock,pointer},dt)=>{if(!fired.current){fired.current=true;onReady?.()}
+  // Intro time comes from the shared GSAP clock; outside the intro every beat reads as finished.
+  const t=intro&&introClock?introClock.current.t:beats.end+4;const p=read(progress);const reveal=beat(t,beats.catch,'snap'),burst=beat(t,beats.burst,'pour');
+  // Shelf velocity drives lean through an underdamped spring, so packages tip into the move and overshoot a little as they settle.
+  const pos=shelf?shelf.position.current.value:0,f=frame.current,vel=THREE.MathUtils.damp(f.vel,dt>0?(pos-last.current)/dt:0,10,dt);last.current=pos;
+  const target=THREE.MathUtils.clamp(-vel*.1,-.38,.38),leanVel=f.leanVel+((target-f.lean)*70-f.leanVel*9)*dt;frame.current={t,pos,vel,leanVel,lean:f.lean+leanVel*dt};
+  if(shelf&&Math.round(pos)!==centre)setCentre(Math.round(pos));
+  if(rig.current){rig.current.rotation.y=THREE.MathUtils.damp(rig.current.rotation.y,pointer.x*.14,4,dt);rig.current.rotation.x=THREE.MathUtils.damp(rig.current.rotation.x,-pointer.y*.05,4,dt)}
+  if(box.current){const b=box.current,squash=Math.sin(beat(t,beats.land,'soft')*Math.PI)*.08,size=1.25-beat(t,[beats.burst[0],beats.exit[1]],'pour')*.5;b.visible=intro&&t<beats.exit[1];b.position.y=-.2+(1-beat(t,beats.drop,'drop'))*5-beat(t,beats.exit,'pour')*4;b.rotation.y=Math.sin(t)*.06;b.scale.set(size*(1+squash*.6),size*(1-squash),size*(1+squash*.6))}
+  lid.current=intro?beat(t,beats.open,'snap'):.17;backdrop.current=intro?1-beat(t,beats.fade,'soft'):0;
+  if(particles.current){particles.current.rotation.y=clock.elapsedTime*.075;particles.current.children.forEach((g,i)=>{const a=i*2.39996+clock.elapsedTime*.12;const r=intro?1.2+burst*2.3:2.3+(i%3)*.35;g.position.set(Math.sin(a)*r,Math.cos(a*.7)*1.5+.3+(intro?(1-burst)*-1.5:0),Math.cos(a)*1.3);g.rotation.set(a,a*.5,a*.2);g.scale.setScalar(.9+(i%4)*.3)})}
+  camera.position.lerp(new THREE.Vector3(0,detail?2.6:2.2,intro?8.6-beat(t,beats.push,'pour')*.9+reveal*.9:8.6-p*1.1),1-Math.exp(-dt*2));camera.lookAt(0,0,0);
  });
+ const n=shelf?.desserts.length??1;const slots=shelf?[-2,-1,0,1,2].map(k=>({i:centre+k,d:shelf.desserts[mod(centre+k,n)]})):[{i:0,d:dessert},...(neighbours[0]?[{i:-1,d:neighbours[0]}]:[]),...(neighbours[1]?[{i:1,d:neighbours[1]}]:[])];
  const gift={...dessert,format:'box',name:'Sweet Munchies',colour:'#f6a198'};
- return <><Studio/><Gradient colour={intro?'#512011':dessert.colour} show={backdrop}/><group ref={hero}><DessertModel d={dessert} open={heroLid}/></group>{neighbours[0]&&<group ref={left}><DessertModel d={neighbours[0]} open={.03}/></group>}{neighbours[1]&&<group ref={right}><DessertModel d={neighbours[1]} open={.1}/></group>}<group ref={box}><DessertModel d={gift} open={lid}/></group><group ref={particles}>{Array.from({length:18},(_,i)=><group key={i}><Ingredient kind={i%3}/></group>)}</group><ContactShadows position={[0,-1.15,0]} opacity={.33} scale={12} blur={2.7} far={5} resolution={tier==='high'?256:128} frames={Infinity}/></>
+ return <><Studio/><Gradient colour={intro?'#512011':dessert.colour} show={backdrop}/><group ref={rig}>{slots.map(({i,d})=><Slot key={i} d={d} i={i} axis={axis} frame={frame} intro={intro} opened={opened} progress={progress} detail={detail}/>)}</group><group ref={box}><DessertModel d={gift} open={lid}/></group><group ref={particles}>{Array.from({length:18},(_,i)=><group key={i}><Ingredient kind={i%3}/></group>)}</group><ContactShadows position={[0,-1.15,0]} opacity={.33} scale={12} blur={2.7} far={5} resolution={tier==='high'?256:128} frames={Infinity}/></>
 }
 export default function Stage(props:StageProps){return <Canvas dpr={[1,dprCap[props.tier??'mid']]} camera={{position:[0,2.2,8.6],fov:33}} gl={{alpha:true,antialias:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;gl.domElement.addEventListener('webglcontextlost',props.onFailure||(()=>{}),{once:true})}}><Scene {...props}/></Canvas>}
