@@ -12,6 +12,13 @@ This is the first deployable build, not an approved live commerce launch.
 - Fonts are downloaded and self-hosted via CSS. Font source is Google Fonts; no reference-site font or asset was used.
 - No persistent browser storage contains customer details or credentials. The cart uses localStorage; admin tokens are in memory.
 
+## Admin access (changed 5 November 2026)
+- At the client's request the admin uses one email and password account instead of ChatGPT sign-in or Supabase Auth roles. This replaces the brief's owner and agency roles and its authenticator-app second factor; revisit if more staff need access.
+- The account lives only in server environment variables: `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` (PBKDF2-SHA256, 210,000 iterations) and `ADMIN_SESSION_SECRET`. Generate them with `node scripts/hash-admin-password.mjs <email>`. Never commit them; locally they sit in the gitignored `.env.local`.
+- Sessions are an HMAC-signed, HttpOnly, SameSite=Strict cookie lasting 12 hours. Admin writes also check the request origin. Login attempts are limited per IP on each server instance.
+- `/admin` is checked on the server and shows only the login form until signed in. Without a database the signed-in panel stays in preview mode.
+- The Sites host's own ChatGPT sign-in wall is a hosting setting, not site code. It does not exist on Vercel.
+
 ## Implemented
 - Responsive 13-dessert shelf, next/previous, keyboard, wheel and touch navigation; per-dessert colours.
 - Branded loading screen driven by logo/font readiness, repeated-visit skip and reduced-motion handling.

@@ -29,11 +29,11 @@ node tests/http-smoke.mjs http://localhost:4173
 ## Data and auth
 
 1. Create a client-owned Supabase project in Sydney. Execute `supabase/migrations/001_foundations.sql`, then `002_seed.sql`.
-2. Disable public auth signup. Create Fizz's account and set trusted app_metadata role to `owner`. Agency accounts use `agency`. Never use user_metadata for authorisation.
+2. Admin login: run `node scripts/hash-admin-password.mjs <email>`, type the password, and add the three printed lines (`ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, `ADMIN_SESSION_SECRET`) to the hosting environment. Locally they go in `.env.local`. Restart the server after changing them.
 3. Add server environment variables from `.env.example` through the hosting dashboard. Do not commit credentials.
 4. Configure Upstash. Public writes and login fail closed without rate limiting.
 5. Review RLS and execute integration tests using a separate sandbox database. No customer table is directly exposed to anonymous/authenticated browser users.
-6. Visit `/admin`. Without a database the clearly labelled design preview edits only in-memory data. With a database the page requires a verified authorised login before any writes.
+6. Visit `/admin` and sign in. Without a database the signed-in panel is a clearly labelled preview that edits only in-memory data.
 
 ## Vercel handoff
 
