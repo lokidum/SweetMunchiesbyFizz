@@ -13,7 +13,7 @@ float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+7.1;a*
 // Drips hanging below the edge: one rounded tongue per column, each with its own length and width.
 float tongue(float x,float freq,float seed,out float id){float c=x*freq+seed;id=floor(c);float f=fract(c)-.5-(h(vec2(id,seed))-.5)*.4,w=.12+.26*h(vec2(id,seed+4.)),len=.15+.85*pow(h(vec2(id,seed+9.)),2.2);float q=clamp(f/w,-1.,1.);return len*sqrt(1.-q*q)*step(abs(f),w);}
 float drip(float x,out float id){float a,b;float d1=tongue(x,5.,0.,a),d2=tongue(x,9.,3.7,b)*.6;id=d1>d2?a:b+50.;return max(d1,d2);}
-float height(vec2 p){vec2 q=p*2.6+vec2(uTime*.04,-uTime*.07);return fbm(q+fbm(q*.6)*1.4);}
+float height(vec2 p){vec2 q=p*2.6+vec2(uTime*.03,-uTime*.05);return fbm(q+fbm(q*.6)*1.4);}
 void main(){
  float aspect=uRes.x/uRes.y;vec2 p=vec2(vUv.x*aspect,vUv.y);float px=1.5/uRes.y;
  float id;float d=drip(p.x,id);float wob=(fbm(vec2(p.x*2.5,uTime*.2))-.5)*.05;
@@ -22,7 +22,7 @@ void main(){
  float shade=below>0.?.4*(1.-smoothstep(0.,.05,below))*step(below,.05)*uIn:0.;
  float H=height(p),e=.003;vec3 nrm=normalize(vec3(-(height(p+vec2(e,0.))-H)/e*.11,-(height(p+vec2(0.,e))-H)/e*.11,1.));
  // Rose folds through the chocolate in ribbons; every other drip runs rose so the edge is two-tone.
- float ribbon=sin(p.x*2.4+p.y*4.2+H*9.+uTime*.25);float rose=smoothstep(.55,.68,ribbon);float streak=smoothstep(.9,.98,sin(p.x*5.+p.y*8.+H*14.))*.35*(1.-rose);
+ float ribbon=sin(p.x*2.4+p.y*4.2+H*9.+uTime*.16);float rose=smoothstep(.55,.68,ribbon);float streak=smoothstep(.9,.98,sin(p.x*5.+p.y*8.+H*14.))*.35*(1.-rose);
  float inDrip=smoothstep(0.,.02,base+wob-p.y);rose=mix(rose,step(.5,h(vec2(id,2.))),inDrip);
  vec3 choc=mix(vec3(.12,.035,.015),vec3(.42,.19,.1),H*H*1.6);vec3 cream=mix(vec3(.8,.42,.45),vec3(1.,.87,.79),H);vec3 col=mix(choc,cream,rose)+vec3(.9,.6,.55)*streak;
  vec3 l=normalize(vec3(-.4,.65,.65));col*=.6+.55*max(dot(nrm,l),0.);
@@ -55,9 +55,9 @@ export function Pour({clock,dprCap=1.5,onFailure}:{clock:{current:{t:number}};dp
   const resize=()=>{const dpr=Math.min(devicePixelRatio,dprCap),w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;gl.viewport(0,0,canvas.width,canvas.height);
    Promise.all([document.fonts.load('600 100px Fredoka'),document.fonts.load('100px Sacramento')]).catch(()=>{}).then(()=>{if(!live)return;const t=drawTagline(canvas.width,canvas.height);split=t.split;gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,t.canvas)})};
   resize();window.addEventListener('resize',resize);const start=performance.now();let frame=0;
-  const tick=()=>{const t=clock.current.t,lift=beat(t,[intro.lift,intro.lift+.95],'pour');
-   gl.uniform2f(uRes,canvas.width,canvas.height);gl.uniform1f(uTime,(performance.now()-start)/1000);gl.uniform1f(uIn,beat(t,[0,.6],'pour'));gl.uniform1f(uLift,lift);
-   gl.uniform3f(uLines,beat(t,[intro.type,intro.type+.5],'drop'),beat(t,[intro.type+.2,intro.type+.7],'drop'),beat(t,[intro.type+.4,intro.type+.9],'drop'));gl.uniform2f(uSplit,split[0],split[1]);
+  const tick=()=>{const t=clock.current.t,lift=beat(t,intro.lift,'pour');
+   gl.uniform2f(uRes,canvas.width,canvas.height);gl.uniform1f(uTime,(performance.now()-start)/1000);gl.uniform1f(uIn,beat(t,intro.pourIn,'pour'));gl.uniform1f(uLift,lift);
+   const line=(n:number)=>beat(t,[intro.type+n*intro.typeStep,intro.type+n*intro.typeStep+intro.typeDur],'snap');gl.uniform3f(uLines,line(0),line(1),line(2));gl.uniform2f(uSplit,split[0],split[1]);
    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
    // Once the sheet has lifted clear there is nothing left to draw.
    if(lift<1)frame=requestAnimationFrame(tick)};

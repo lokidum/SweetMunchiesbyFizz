@@ -81,6 +81,8 @@ Not done in Step C, and why:
 - **"What is it?" copy.** It needs Fizz's wording.
 - **On repeat visits the short intro waits up to 1.2s for the 3D stage to compile** before playing its 1s run, instead of stalling midway.
 
+**Pacing change (5 November 2026):** on Fizz's feedback the intro now runs as a slow opening reel of about 13s rather than the 5s design target. The pour fills over 2.4s, the tagline lands from 2.1s and holds, the drips lift from 5.6s to 8.2s, the box drops at 7.6s and the shelf is revealed at 11.2s. Tap plays the rest at 5 times speed, and a repeat visit runs about 1.3s. All beats live in `lib/motion/index.ts`.
+
 Original plan for reference:
 
 1. **Loader in the first HTML.** Inline SVG logo plus a 2D canvas of about 90 crumbs on the swirl path, with a spring toward pointer or finger. Real progress tightens the orbit and fills the logo bottom up through `clip-path`. At 100: crumbs burst, one heartbeat, hand off to the timeline.
