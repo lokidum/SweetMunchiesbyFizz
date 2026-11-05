@@ -6,7 +6,7 @@ import {beat,intro} from '@/lib/motion';
 // line by line on its surface, then the sheet lifts off the screen on two-tone drips and wipes the type away with it.
 const vertex='attribute vec2 p;varying vec2 vUv;void main(){vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
 const fragment=`precision highp float;
-uniform vec2 uRes;uniform float uTime,uIn,uLift;uniform vec3 uLines;uniform vec2 uSplit;uniform sampler2D uText;varying vec2 vUv;
+uniform vec2 uRes;uniform float uTime,uIn,uLift;uniform vec3 uLines;uniform sampler2D uT0,uT1,uT2;varying vec2 vUv;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+7.1;a*=.5;}return v;}
@@ -28,19 +28,23 @@ void main(){
  vec3 l=normalize(vec3(-.4,.65,.65));col*=.6+.55*max(dot(nrm,l),0.);
  float spec=pow(max(dot(reflect(-l,nrm),vec3(0,0,1)),0.),70.)*(.9+.5*rose);float sheen=smoothstep(.55,1.,sin(p.x*1.3-p.y*.9+uTime*.35))*.12;col+=spec+sheen*vec3(1.,.85,.75);
  float rim=p.y-edge;col+=vec3(1.,.88,.78)*.45*(1.-smoothstep(0.,.008,rim))*cover;col*=1.-.35*smoothstep(.008,.02,rim)*(1.-smoothstep(.02,.05,rim));
- // Tagline: three bands, each slides up and fades in on its own beat, and rides on the sheet.
- float band=p.y>uSplit.x?0.:p.y>uSplit.y?1.:2.;float r=band<.5?uLines.x:band<1.5?uLines.y:uLines.z;float sy=vUv.y+(1.-r)*.06;float sband=sy>uSplit.x?0.:sy>uSplit.y?1.:2.;
- vec4 t=texture2D(uText,vec2(vUv.x,1.-sy))*step(abs(sband-band),.5);col=mix(col,t.rgb/max(t.a,.001)+spec*.3,t.a*r);
+ // Tagline: each line is its own layer that slides up and fades in on its beat. The script layer goes on last so it
+ // sits across the capitals, and no line is ever clipped by another.
+ vec4 a0=texture2D(uT0,vec2(vUv.x,1.-vUv.y-(1.-uLines.x)*.05));col=mix(col,a0.rgb/max(a0.a,.001)+spec*.3,a0.a*uLines.x);
+ vec4 a2=texture2D(uT2,vec2(vUv.x,1.-vUv.y-(1.-uLines.z)*.05));col=mix(col,a2.rgb/max(a2.a,.001)+spec*.3,a2.a*uLines.z);
+ vec4 a1=texture2D(uT1,vec2(vUv.x,1.-vUv.y-(1.-uLines.y)*.05));col=mix(col,a1.rgb/max(a1.a,.001)+spec*.2,a1.a*uLines.y);
  gl_FragColor=vec4(col*cover,cover)+vec4(0.,0.,0.,shade*(1.-cover));
 }`;
 
-function drawTagline(w:number,h:number){const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d')!;const size=Math.min(130,Math.max(60,w*.08)),cx=w/2,cy=h/2;
- ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#230b0899';ctx.shadowOffsetY=size*.04;ctx.shadowBlur=size*.05;
- ctx.font=`600 ${size}px Fredoka`;ctx.fillStyle='#ffe4c7';ctx.fillText('CRAVE IT.',cx,cy-size*.95);ctx.fillText('LOVE IT.',cx,cy+size*.95);
- ctx.save();ctx.translate(cx,cy);ctx.rotate(-8*Math.PI/180);ctx.font=`400 ${size*1.08}px Sacramento`;ctx.shadowBlur=size*.12;ctx.lineWidth=Math.max(2,size*.025);ctx.strokeStyle='#ffe4c7';ctx.strokeText('Munch it.',0,0);ctx.fillStyle='#d6456a';ctx.fillText('Munch it.',0,0);ctx.restore();
- ctx.shadowColor='transparent';ctx.font=`700 ${Math.max(8,size*.08)}px Nunito`;ctx.fillStyle='#f9d8c4';ctx.fillText('A LITTLE ANTICIPATION. A LOT OF SWEET.',cx,cy-size*1.75);
- // Band boundaries in uv space (y up), halfway between the lines.
- return {canvas:c,split:[.5+size*.5/h,.5-size*.5/h] as [number,number]}}
+// Three layers: the capitals with the eyebrow, the script, and the last line, so each can land on its own beat.
+function drawTagline(w:number,h:number){const size=Math.min(130,Math.max(60,w*.08)),cx=w/2,cy=h/2;
+ const layer=(draw:(ctx:CanvasRenderingContext2D)=>void)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d')!;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#230b0899';ctx.shadowOffsetY=size*.04;ctx.shadowBlur=size*.05;draw(ctx);return c};
+ const caps=(text:string,y:number)=>(ctx:CanvasRenderingContext2D)=>{ctx.font=`600 ${size}px Fredoka`;ctx.fillStyle='#ffe4c7';ctx.fillText(text,cx,y)};
+ return [
+  layer(ctx=>{caps('CRAVE IT.',cy-size*.95)(ctx);ctx.shadowColor='transparent';ctx.font=`700 ${Math.max(8,size*.08)}px Nunito`;ctx.fillStyle='#f9d8c4';ctx.fillText('A LITTLE ANTICIPATION. A LOT OF SWEET.',cx,cy-size*1.75)}),
+  layer(ctx=>{ctx.translate(cx,cy);ctx.rotate(-8*Math.PI/180);ctx.font=`400 ${size*1.08}px Sacramento`;ctx.shadowBlur=size*.12;ctx.lineWidth=Math.max(2,size*.025);ctx.strokeStyle='#ffe4c7';ctx.strokeText('Munch it.',0,0);ctx.fillStyle='#d6456a';ctx.fillText('Munch it.',0,0)}),
+  layer(caps('LOVE IT.',cy+size*.95)),
+ ]}
 
 export function Pour({clock,dprCap=1.5,onFailure}:{clock:{current:{t:number}};dprCap?:number;onFailure:()=>void}){
  const ref=useRef<HTMLCanvasElement>(null);
@@ -48,21 +52,21 @@ export function Pour({clock,dprCap=1.5,onFailure}:{clock:{current:{t:number}};dp
   const shader=(type:number,src:string)=>{const s=gl.createShader(type)!;gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s)||'shader');return s};
   let program:WebGLProgram;try{program=gl.createProgram()!;gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error("link")}catch{onFailure();return}
   gl.useProgram(program);const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);const loc=gl.getAttribLocation(program,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  const u=(name:string)=>gl.getUniformLocation(program,name);const uRes=u('uRes'),uTime=u('uTime'),uIn=u('uIn'),uLift=u('uLift'),uLines=u('uLines'),uSplit=u('uSplit');
-  const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(k=>gl.texParameteri(gl.TEXTURE_2D,k,gl.CLAMP_TO_EDGE));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));
-  let split:[number,number]=[.6,.4],live=true;
+  const u=(name:string)=>gl.getUniformLocation(program,name);const uRes=u('uRes'),uTime=u('uTime'),uIn=u('uIn'),uLift=u('uLift'),uLines=u('uLines');
+  const textures=[0,1,2].map(unit=>{const texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(k=>gl.texParameteri(gl.TEXTURE_2D,k,gl.CLAMP_TO_EDGE));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));gl.uniform1i(u(`uT${unit}`),unit);return texture});
+  let live=true;
   const resize=()=>{const dpr=Math.min(devicePixelRatio,dprCap),w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;gl.viewport(0,0,canvas.width,canvas.height);
-   Promise.all([document.fonts.load('600 100px Fredoka'),document.fonts.load('100px Sacramento')]).catch(()=>{}).then(()=>{if(!live)return;const t=drawTagline(canvas.width,canvas.height);split=t.split;gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,t.canvas)})};
+   Promise.all([document.fonts.load('600 100px Fredoka'),document.fonts.load('100px Sacramento')]).catch(()=>{}).then(()=>{if(!live)return;drawTagline(canvas.width,canvas.height).forEach((layer,unit)=>{gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,textures[unit]);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,layer)})})};
   resize();window.addEventListener('resize',resize);const start=performance.now();let frame=0;
   const tick=()=>{const t=clock.current.t,lift=beat(t,intro.lift,'pour');
    gl.uniform2f(uRes,canvas.width,canvas.height);gl.uniform1f(uTime,(performance.now()-start)/1000);gl.uniform1f(uIn,beat(t,intro.pourIn,'pour'));gl.uniform1f(uLift,lift);
-   const line=(n:number)=>beat(t,[intro.type+n*intro.typeStep,intro.type+n*intro.typeStep+intro.typeDur],'snap');gl.uniform3f(uLines,line(0),line(1),line(2));gl.uniform2f(uSplit,split[0],split[1]);
+   const line=(n:number)=>beat(t,[intro.type+n*intro.typeStep,intro.type+n*intro.typeStep+intro.typeDur],'snap');gl.uniform3f(uLines,line(0),line(1),line(2));
    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
    // Once the sheet has lifted clear there is nothing left to draw.
    if(lift<1)frame=requestAnimationFrame(tick)};
   frame=requestAnimationFrame(tick);
   // No loseContext here: the canvas element is reused when React re-runs this effect, and a lost context cannot compile.
-  return()=>{live=false;cancelAnimationFrame(frame);window.removeEventListener('resize',resize);gl.deleteTexture(texture);gl.deleteBuffer(buffer);gl.deleteProgram(program)}},[clock,dprCap,onFailure]);
+  return()=>{live=false;cancelAnimationFrame(frame);window.removeEventListener('resize',resize);textures.forEach(t=>gl.deleteTexture(t));gl.deleteBuffer(buffer);gl.deleteProgram(program)}},[clock,dprCap,onFailure]);
  return <canvas ref={ref} className="pour-canvas" aria-hidden="true"/>
 }
